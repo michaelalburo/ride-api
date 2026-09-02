@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+from django.utils import timezone
 from rest_framework import serializers
 
 from rideflow.apps.users.models import User
@@ -9,7 +12,7 @@ from .models import Ride, RideEvent
 class RideEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = RideEvent
-        fields = ['id', 'description', 'created_at']
+        fields = ['id', 'ride', 'description', 'created_at']
 
 
 class RideSerializer(serializers.ModelSerializer):
@@ -31,5 +34,6 @@ class RideSerializer(serializers.ModelSerializer):
     def get_todays_ride_events(self, obj):
         events = getattr(obj, 'todays_ride_events', None)
         if events is None:
-            events = obj.ride_events.all()
+            cutoff = timezone.now() - timedelta(hours=24)
+            events = obj.ride_events.filter(created_at__gte=cutoff)
         return RideEventSerializer(events, many=True).data

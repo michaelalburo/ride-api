@@ -80,6 +80,13 @@ class RideListAPITests(TestCase):
         descriptions = [e['description'] for e in ride_data['todays_ride_events']]
         self.assertEqual(descriptions, ['Status changed to pickup'])
 
+    def test_todays_ride_events_excludes_old_events_on_retrieve_too(self):
+        # The retrieve action doesn't go through RideQueryService's Prefetch,
+        # so the serializer's fallback path needs its own 24h filter.
+        response = self.client.get(f'/api/rides/{self.ride1.id}/')
+        descriptions = [e['description'] for e in response.data['todays_ride_events']]
+        self.assertEqual(descriptions, ['Status changed to pickup'])
+
     def test_filter_by_status(self):
         response = self.client.get('/api/rides/', {'status': Ride.Status.PICKUP})
         self.assertEqual(response.data['count'], 1)
@@ -131,3 +138,32 @@ class RideListAPITests(TestCase):
                 '/api/rides/', {'ordering': 'distance', 'lat': 14.5995, 'lng': 120.9842},
             )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class RideEventAPITests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.admin = User.objects.create_user(
+            email='admin2@test.com', password='pass12345', role=User.Role.ADMIN,
+        )
+        rider = User.objects.create_user(
+            email='rider3@test.com', password='pass12345', role=User.Role.RIDER,
+        )
+        driver = User.objects.create_user(
+            email='driver2@test.com', password='pass12345', role=User.Role.DRIVER,
+        )
+        self.ride = Ride.objects.create(
+            status=Ride.Status.EN_ROUTE, rider=rider, driver=driver,
+            pickup_latitude=0, pickup_longitude=0,
+            dropoff_latitude=0, dropoff_longitude=0,
+            pickup_time=timezone.now(),
+        )
+        self.client.force_authenticate(user=self.admin)
+
+    def test_create_ride_event_for_a_ride(self):
+        response = self.client.post('/api/ride-events/', {
+            'ride': self.ride.id, 'description': 'Status changed to pickup',
+        })
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['ride'], self.ride.id)
+        self.assertEqual(RideEvent.objects.filter(ride=self.ride).count(), 1)
