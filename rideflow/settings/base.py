@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'apis',
     'rideflow.apps.users',
+    'rideflow.apps.rides',
 ]
 
 MIDDLEWARE = [
