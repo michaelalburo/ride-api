@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_filters',
     'apis',
     'rideflow.apps.users',
     'rideflow.apps.rides',
@@ -85,4 +86,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'apis.permissions.IsAdminRole',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'rideflow.utils.pagination.StandardResultsSetPagination',
+    'PAGE_SIZE': 20,
 }
