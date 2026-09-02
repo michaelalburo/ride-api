@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'apis',
+    'rideflow.apps.users',
 ]
 
 MIDDLEWARE = [
@@ -57,6 +58,8 @@ ASGI_APPLICATION = 'rideflow.asgi.application'
 DATABASES = {
     'default': env.db('DATABASE_URL'),
 }
+
+AUTH_USER_MODEL = 'users.User'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
